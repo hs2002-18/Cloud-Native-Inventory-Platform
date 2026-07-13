@@ -10,7 +10,8 @@ from app.services.product_service import (
     create_product, 
     get_products,
     get_product_by_id,
-    update_product_by_id
+    update_product_by_id,
+    delete_product_by_id
 )
 
 router = APIRouter(
@@ -57,3 +58,20 @@ def update_product_endpoint(
         )
 
     return updated_product
+
+@router.delete("/{product_id}")
+def delete_product_endpoint(
+    product_id: int,
+    db: Session = Depends(get_db)
+):
+    product = delete_product_by_id(db, product_id)
+
+    if product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    return {
+        "message": "Product deleted successfully"
+    }

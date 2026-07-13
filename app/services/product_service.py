@@ -39,3 +39,14 @@ def update_product_by_id(db: Session, product_id: int, updated_product: ProductC
     db.refresh(product)
 
     return product
+
+def delete_product_by_id(db: Session, product_id: int):
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if product is None:
+        return None
+
+    db.delete(product)
+    db.commit()
+
+    return product
