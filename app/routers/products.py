@@ -9,7 +9,8 @@ from app.schemas.product import(
 from app.services.product_service import (
     create_product, 
     get_products,
-    get_product_by_id
+    get_product_by_id,
+    update_product_by_id
 )
 
 router = APIRouter(
@@ -40,3 +41,19 @@ def get_product(
         )
 
     return product
+
+@router.put("/{product_id}", response_model=ProductResponse)
+def update_product_endpoint(
+    product_id: int,
+    product: ProductCreate,
+    db: Session = Depends(get_db)
+):
+    updated_product = update_product_by_id(db, product_id, product)
+
+    if updated_product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    return updated_product
