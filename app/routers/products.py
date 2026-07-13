@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from app.logger import logger
 from app.database import get_db
 from app.schemas.product import(
     ProductCreate, 
@@ -36,6 +36,7 @@ def get_product(
     product = get_product_by_id(db, product_id)
 
     if product is None:
+        logger.warning(f"Product ID={product_id} not found.")
         raise HTTPException(
             status_code=404,
             detail="Product not found"
@@ -52,6 +53,7 @@ def update_product_endpoint(
     updated_product = update_product_by_id(db, product_id, product)
 
     if updated_product is None:
+        logger.warning(f"Product ID={product_id} not found.")
         raise HTTPException(
             status_code=404,
             detail="Product not found"
@@ -67,6 +69,7 @@ def delete_product_endpoint(
     product = delete_product_by_id(db, product_id)
 
     if product is None:
+        logger.warning(f"Product ID={product_id} not found.")
         raise HTTPException(
             status_code=404,
             detail="Product not found"

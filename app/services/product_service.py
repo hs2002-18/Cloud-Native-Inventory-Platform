@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from app.logger import logger
 from app.models.products import Product
 from app.schemas.product import ProductCreate
 
@@ -15,13 +15,17 @@ def create_product(db: Session, product: ProductCreate):
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
+    logger.info(f"Product created: ID={db_product.id}")
 
     return db_product
 
 def get_products(db: Session):
-    return db.query(Product).all()
+    products = db.query(Product).all()
+    logger.info(f"Retrieved {len(products)} products.")
+    return products
 
 def get_product_by_id(db: Session, product_id: int):
+    logger.info(f"Retrieved product ID={product_id}")
     return db.query(Product).filter(Product.id == product_id).first()
 
 def update_product_by_id(db: Session, product_id: int, updated_product: ProductCreate):
@@ -37,7 +41,7 @@ def update_product_by_id(db: Session, product_id: int, updated_product: ProductC
 
     db.commit()
     db.refresh(product)
-
+    logger.info(f"Updated product ID={product.id}")
     return product
 
 def delete_product_by_id(db: Session, product_id: int):
@@ -48,5 +52,5 @@ def delete_product_by_id(db: Session, product_id: int):
 
     db.delete(product)
     db.commit()
-
+    logger.info(f"Deleted product ID={product.id}")
     return product
