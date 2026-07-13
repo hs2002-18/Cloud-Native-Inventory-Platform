@@ -1,23 +1,27 @@
-import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import DATABASE_NAME
 
-def get_connection():
-    conn = sqlite3.connect(DATABASE_NAME)
-    conn.rowfactory = sqlite3.Row
-    return conn
+DATABASE_URL = f"sqlite:///{DATABASE_NAME}"
 
-def initialise_database():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            price REAL NOT NULL,
-            quantity INTEGER NOT NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

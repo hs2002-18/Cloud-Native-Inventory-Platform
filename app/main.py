@@ -1,10 +1,12 @@
 from fastapi import FastAPI
-
+from app.routers.health import router as health_router
+from app.routers.products import router as product_router
+from app.database import Base, engine
 from app.config import (
     APP_NAME,
     APP_VERSION
 )
-from app.database import initialise_database
+
 
 app = FastAPI(
     title=APP_NAME,
@@ -13,7 +15,10 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup():
-    initialise_database
+    Base.metadata.create_all(bind=engine)
+
+app.include_router(health_router)
+app.include_router(product_router)
 
 @app.get("/")
 def root():
