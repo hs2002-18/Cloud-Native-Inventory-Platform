@@ -1,0 +1,9 @@
+Cloud-Native Inventory Platform has been deployed successfully.
+
+To access the application locally, run:
+
+kubectl port-forward service/{{ include "inventory-platform.fullname" . }} 8000:8000 -n {{ .Release.Namespace }}
+
+Then open:
+
+http://localhost:8000/docs
