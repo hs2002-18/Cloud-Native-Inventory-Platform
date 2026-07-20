@@ -1,0 +1,12 @@
+---
+- hosts: inventory_servers
+  become: true
+  become_user: root
+
+  roles:
+    - common
+    - docker
+    - kubectl
+    - kind
+    - helm
+    - inventory-platform

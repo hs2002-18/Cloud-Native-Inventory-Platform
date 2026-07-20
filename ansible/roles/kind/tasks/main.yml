@@ -1,0 +1,39 @@
+---
+- name: Download Kind binary
+  get_url:
+    url: https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
+    dest: /usr/local/bin/kind
+    mode: '0755'
+
+- name: Verify Kind
+  command: kind --version
+  register: kind_version
+  changed_when: false
+
+- debug:
+    var: kind_version.stdout
+
+- name: Check existing Kind clusters
+  become: false
+  command: kind get clusters
+  register: kind_clusters
+  failed_when: false
+  changed_when: false
+
+- name: Create Kind cluster
+  become: false
+  command: kind create cluster --name {{ kind_cluster_name }}
+  when: "'inventory-platform' not in kind_clusters.stdout"
+
+- name: Export kubeconfig
+  become: false
+  command: kind export kubeconfig --name {{ kind_cluster_name }}
+
+- name: Verify cluster
+  become: false
+  command: kubectl get nodes
+  register: cluster_nodes
+  changed_when: false
+
+- debug:
+    var: cluster_nodes.stdout_lines

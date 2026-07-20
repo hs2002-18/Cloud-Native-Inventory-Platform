@@ -1,0 +1,15 @@
+project_name: inventory-platform
+
+github_repo: "https://github.com/hs2002-18/Cloud-Native-Inventory-Platform.git"
+
+project_dir: /opt/cloud-native-inventory-platform
+
+docker_image: inventory-platform:v1
+
+namespace: inventory-platform
+
+monitoring_namespace: monitoring
+
+kind_cluster_name: inventory-platform
+
+kubeconfig_path: "/home/{{ ansible_user }}/.kube/config"

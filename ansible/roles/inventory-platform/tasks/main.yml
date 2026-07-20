@@ -1,0 +1,165 @@
+---
+- name: Build Docker image
+  command:
+    cmd: docker build -t {{ docker_image }} .
+    chdir: "{{ project_dir }}"
+
+- name: Load image into Kind
+  become: false
+  command:
+    cmd: kind load docker-image {{ docker_image }} --name inventory-platform
+
+- name: Install Metrics Server
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+- name: Wait for Metrics Server Deployment
+  command:
+    cmd: kubectl wait --for=condition=Available deployment/metrics-server -n kube-system --timeout=120s
+  failed_when: false
+
+- name: Patch Metrics Server
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  shell: |
+    kubectl patch deployment metrics-server \
+      -n kube-system \
+      --type='json' \
+      -p='[
+      {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"},
+      {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname"}
+      ]'
+  failed_when: false
+
+- name: Restart Metrics Server
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl rollout restart deployment metrics-server -n kube-system
+
+- name: Wait for Metrics Server
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl rollout status deployment/metrics-server -n kube-system
+
+- name: Create Application Namespace
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl create namespace {{ namespace }}
+  failed_when: false
+
+- name: Deploy Inventory Platform
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: helm upgrade --install inventory {{ project_dir }}/helm/inventory-platform --namespace {{ namespace }} --create-namespace
+
+- name: Wait for Inventory Platform
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl rollout status deployment/inventory-inventory-platform -n {{ namespace }}
+
+- name: Add Prometheus Repository
+  become: false
+  become_user: "{{ ansible_user }}"
+  command:
+    cmd: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  failed_when: false
+
+- name: Update Helm Repositories
+  become: false
+  become_user: "{{ ansible_user }}"
+  command:
+    cmd: helm repo update
+
+- name: Install Prometheus
+  become: false
+  become_user: "{{ ansible_user }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: >
+      helm upgrade --install prometheus
+      prometheus-community/prometheus
+      --namespace {{ monitoring_namespace }}
+      --create-namespace
+
+- name: Wait for Prometheus
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl rollout status deployment/prometheus-server -n {{ monitoring_namespace }}
+
+- name: Add Grafana Repository
+  become: false
+  become_user: "{{ ansible_user }}"
+  command:
+    cmd: helm repo add grafana https://grafana.github.io/helm-charts
+  failed_when: false
+
+- name: Update Helm Repositories
+  become: false
+  become_user: "{{ ansible_user }}"
+  command:
+    cmd: helm repo update
+
+- name: Install Grafana
+  become: false
+  become_user: "{{ ansible_user }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: >
+      helm upgrade --install grafana
+      grafana/grafana
+      --namespace {{ monitoring_namespace }}
+      --create-namespace
+
+- name: Show Nodes
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl get nodes
+  register: nodes
+  changed_when: false
+
+- debug:
+    var: nodes.stdout_lines
+
+- name: Show Application Pods
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl get pods -n {{ namespace }}
+  register: app_pods
+  changed_when: false
+
+- debug:
+    var: app_pods.stdout_lines
+
+- name: Show Monitoring Pods
+  become: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  command:
+    cmd: kubectl get pods -n {{ monitoring_namespace }}
+  register: monitoring_pods
+  changed_when: false
+
+- debug:
+    var: monitoring_pods.stdout_lines
