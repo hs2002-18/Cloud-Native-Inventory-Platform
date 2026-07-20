@@ -11,7 +11,11 @@ ENV=$1
 PUBLIC_IP=$2
 
 INVENTORY_FILE="ansible/inventory/hosts.ini"
-KEY_FILE="../terraform/environments/${ENV}/project.pem"
+if [ -n "$GITHUB_ACTIONS" ]; then
+    KEY_FILE="$HOME/.ssh/project.pem"
+else
+    KEY_FILE="../terraform/environments/${ENV}/project.pem"
+fi
 
 cat > "${INVENTORY_FILE}" <<EOF
 [inventory_servers]
