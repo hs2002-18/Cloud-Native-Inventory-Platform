@@ -9,3 +9,14 @@ __pycache__/
 .vscode
 .idea
 uvicorn.log
+terraform/
+ansible/
+kind-config.yaml
+*.pem
+.terraform/
+*.tfstate
+*.tfstate.*
+.vscode/
+.idea/
+README.md
+**/.DS_Store
