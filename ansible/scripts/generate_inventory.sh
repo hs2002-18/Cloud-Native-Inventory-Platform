@@ -2,18 +2,16 @@
 
 set -e
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <dev|prod>"
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <dev|prod> <public_ip>"
     exit 1
 fi
 
 ENV=$1
+PUBLIC_IP=$2
 
-TERRAFORM_DIR="terraform/environments/${ENV}"
 INVENTORY_FILE="ansible/inventory/hosts.ini"
 KEY_FILE="../terraform/environments/${ENV}/project.pem"
-
-PUBLIC_IP=$(terraform -chdir=${TERRAFORM_DIR} output -raw public_ip)
 
 cat > "${INVENTORY_FILE}" <<EOF
 [inventory_servers]
