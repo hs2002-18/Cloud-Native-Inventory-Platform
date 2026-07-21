@@ -279,7 +279,7 @@ Supports both:
 
 ---
 # 📸 Screenshots
-![Screen Shot](images/screen shot.png)
+![Screen Shot](images/screen-shot.png)
 
 ---
 
