@@ -34,9 +34,6 @@ The project provisions infrastructure using Terraform, configures the server usi
 
 [![Uvicorn](https://img.shields.io/badge/Uvicorn-FFC107?style=for-the-badge&logo=uvicorn&logoColor=black)](https://www.uvicorn.org/)
 
-**Database:**
-
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
 **Cloud & DevOps:**
 
